@@ -1,0 +1,3 @@
+*.hack linguist-language=Hack
+
+composer.lock expoert-ignore
