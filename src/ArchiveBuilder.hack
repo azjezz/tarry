@@ -1,31 +1,47 @@
 namespace Tarry;
 
-use namespace HH\Lib\{Math, Str};
+use namespace HH\Lib\{Math, Str, Vec};
 
 final class ArchiveBuilder {
-  private vec<ArchiveNode> $nodes = vec[];
-  private Compresser\ICompresser $compresser;
+  const DEFAULT_GZIP_LEVEL = 9;
+  const DEFAULT_BZIP_LEVEL = 9;
 
-  public function __construct()[] {
-    $this->compresser = new Compresser\NoneCompresser();
-  }
+  public function __construct(
+    private CompressionAlgorithm $compressionAlgorithm,
+    private ?int $compressionLevel = null,
+    private vec<ArchiveNode> $nodes = vec[],
+  )[] {}
 
   public static function create()[]: ArchiveBuilder {
-    return new ArchiveBuilder();
+    return new ArchiveBuilder(CompressionAlgorithm::NONE);
   }
 
-  public function withNode(ArchiveNode $node)[write_props]: ArchiveBuilder {
-    $this->nodes[] = $node;
-
-    return $this;
+  public function withNode(ArchiveNode $node)[]: ArchiveBuilder {
+    return new self(
+      $this->compressionAlgorithm,
+      $this->compressionLevel,
+      Vec\concat($this->nodes, vec[$node]),
+    );
   }
 
-  public function withCompressor(
-    Compresser\ICompresser $compressor,
-  )[write_props]: ArchiveBuilder {
-    $this->compresser = $compressor;
+  public function withCompressionAlgorithm(
+    CompressionAlgorithm $compressionAlgorithm,
+  )[]: ArchiveBuilder {
+    return new self(
+      $compressionAlgorithm,
+      $this->compressionLevel,
+      $this->nodes,
+    );
+  }
 
-    return $this;
+  public function withCompressionLevel(
+    int $compressionLevel,
+  )[]: ArchiveBuilder {
+    return new self(
+      $this->compressionAlgorithm,
+      $compressionLevel,
+      $this->nodes,
+    );
   }
 
   public function build()[rx_local]: string {
@@ -38,7 +54,22 @@ final class ArchiveBuilder {
     $archive .= \pack('a512', '');
     $archive .= \pack('a512', '');
 
-    return $this->compresser->compress($archive);
+    switch ($this->compressionAlgorithm) {
+      case CompressionAlgorithm::NONE:
+        return $archive;
+
+      case CompressionAlgorithm::GZIP:
+        return \gzencode(
+          $archive,
+          $this->compressionLevel ?? self::DEFAULT_GZIP_LEVEL,
+        ) as string;
+
+      case CompressionAlgorithm::BZIP:
+        return \bzcompress(
+          $archive,
+          $this->compressionLevel ?? self::DEFAULT_BZIP_LEVEL,
+        ) as string;
+    }
   }
 
   <<__Memoize>>

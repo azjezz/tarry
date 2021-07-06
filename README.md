@@ -31,23 +31,19 @@ composer require azjezz/tarry
 
 ```hack
 use namespace Tarry;
-use namespace Tarry\Compressor;
 use namespace HH\Lib\File;
 
-async function main(): Awaitable<void> {
+async function main()[rx_local]: Awaitable<void> {
   $archive = Tarry\ArchiveBuilder::create()
-    ->withCompressor(Compressor\GZIPCompressor::create(9))
+    ->withCompressionAlgorithm(CompressionAlgorithm::GZIP)
+    ->withCompressionLevel(9)
     ->withNode(shape(
       'filename' => 'hello-world.txt',
       'content' => 'Hello, World!',
     ))
     ->build();
 
-  $file = File\open_write_only(__DIR__ . '/archive.tar.gz');
-
-  await $file->writeAllAsync($archive);
-
-  $file->close();
+  $archive->saveToFile('hello-world.tar.gz');
 }
 ```
 
