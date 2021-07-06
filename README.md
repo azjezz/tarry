@@ -43,7 +43,7 @@ async function main()[rx_local]: Awaitable<void> {
     ))
     ->build();
 
-  $archive->saveToFile('hello-world.tar.gz');
+  await $archive->saveToFile('hello-world.tar.gz');
 }
 ```
 
