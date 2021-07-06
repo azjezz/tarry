@@ -1,6 +1,6 @@
 namespace Tarry;
 
-use namespace HH\Lib\{Math, Str, Vec};
+use namespace HH\Lib\{Math, Str, Vec, IO};
 
 final class ArchiveBuilder {
   const DEFAULT_GZIP_LEVEL = 9;
@@ -44,7 +44,7 @@ final class ArchiveBuilder {
     );
   }
 
-  public function build()[rx_local]: string {
+  public function build()[rx_local]: Archive {
     $archive = '';
     foreach ($this->nodes as $node) {
       $archive .= static::buildNode($node);
@@ -56,20 +56,22 @@ final class ArchiveBuilder {
 
     switch ($this->compressionAlgorithm) {
       case CompressionAlgorithm::NONE:
-        return $archive;
-
+        $content = $archive;
+        break;
       case CompressionAlgorithm::GZIP:
-        return \gzencode(
+        $content = \gzencode(
           $archive,
           $this->compressionLevel ?? self::DEFAULT_GZIP_LEVEL,
         ) as string;
-
+        break;
       case CompressionAlgorithm::BZIP:
-        return \bzcompress(
+        $content = \bzcompress(
           $archive,
           $this->compressionLevel ?? self::DEFAULT_BZIP_LEVEL,
         ) as string;
     }
+
+    return new Archive(new IO\MemoryHandle($content));
   }
 
   <<__Memoize>>
