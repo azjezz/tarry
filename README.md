@@ -33,7 +33,7 @@ composer require azjezz/tarry
 use namespace Tarry;
 use namespace HH\Lib\File;
 
-async function main()[rx_local]: Awaitable<void> {
+async function main(): Awaitable<void> {
   $archive = Tarry\ArchiveBuilder::create()
     ->withCompressionAlgorithm(CompressionAlgorithm::GZIP)
     ->withCompressionLevel(9)
